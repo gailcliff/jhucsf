@@ -71,9 +71,57 @@ void imgproc_mirror_v( struct Image *input_img, struct Image *output_img ) {
 //     - n is less than 1, or
 //     - the output can't be generated because at least one tile would
 //       be empty (i.e., have 0 width or height)
-int imgproc_tile( struct Image *input_img, int n, struct Image *output_img ) {
-  // TODO: implement
-  return 0;
+// int imgproc_tile( struct Image *input_img, int n, struct Image *output_img ) {
+//   // TODO: implement
+//   return 0;
+// }
+
+
+int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
+    // Check for invalid input (n must be at least 1)
+    if (n < 1) {
+        return 0;
+    }
+
+    int input_width = input_img->width;
+    int input_height = input_img->height;
+
+    // Calculate the size of each tile
+    int tile_width = input_width / n;
+    int tile_height = input_height / n;
+
+    // Ensure that tiles have non-zero dimensions
+    if (tile_width == 0 || tile_height == 0) {
+        return 0;
+    }
+
+    // Set output image dimensions
+    output_img->width = tile_width * n;
+    output_img->height = tile_height * n;
+
+    // Loop over each tile
+    for (int ty = 0; ty < n; ty++) {
+        for (int tx = 0; tx < n; tx++) {
+            // Loop over each pixel within the tile
+            for (int y = 0; y < tile_height; y++) {
+                for (int x = 0; x < tile_width; x++) {
+                    // Calculate source and destination indices
+                    int src_x = x;
+                    int src_y = y;
+                    int src_index = src_y * input_width + src_x;
+                    
+                    int dst_x = tx * tile_width + x;
+                    int dst_y = ty * tile_height + y;
+                    int dst_index = dst_y * (tile_width * n) + dst_x;
+
+                    // Copy the pixel from source to destination
+                    output_img->data[dst_index] = input_img->data[src_index];
+                }
+            }
+        }
+    }
+
+    return 1; // Success
 }
 
 // Convert input pixels to grayscale.
