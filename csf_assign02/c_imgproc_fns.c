@@ -151,32 +151,37 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
         heights[i] = floor_h;
     }
     
-    // ENTER CODE FOR TILE HERE
+    output_img->width = input_width;
+    output_img->height = input_height;
 
-    int src_y = 0;
-  for (int tile_row = 0; tile_row < n; tile_row++) {
-    int src_x = 0;
-    int tile_width = widths[tile_col];
-    int tile_height = heights[tile_row];
+    for(int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            // if (i > 2 || j > 2) {
+                // continue;
+            //}
+            uint32_t* scaledTile = malloc(heights[i] * widths[j] * sizeof(uint32_t));
+            if (scaledTile == NULL) {
+                exit(1);  // Memory allocation failed
+            }
 
-    for (int y = 0; y < tile_height; y++) {
-      for (int x = 0; x < tile_width; x++) {
-        // Calculate source pixel coordinates (avoiding out-of-bounds)
-        int src_pixel_x = (int)fmin(x * ((double)input_width / tile_width), input_width - 1);
-        int src_pixel_y = (int)fmin(y * ((double)input_height / tile_height), input_height - 1);
-
-        // Calculate destination coordinates within the tile in the output image
-        int dst_x = src_x + x;  // Offset by position within the tile
-        int dst_y = src_y + y;
-
-        // Get source pixel and set it in the output image
-        uint32_t pixel = input_img->data[src_pixel_y * input_width + src_pixel_x];
-        output_img->data[dst_y * input_width + dst_x] = pixel;
-      }
+            for (int y = 0; y < heights[i]; y++) {
+                for (int x = 0; x < widths[j]; x++) {
+                    int originalX = x * n;
+                    int originalY = y * n;
+                    scaledTile[y * widths[j] + x] = input_img->data[originalY * input_img->width + originalX];
+                }
+            }
+            // transfer tile into position
+            for (int y = 0; y < heights[i]; y++) {
+                for (int x = 0; x < widths[j]; x++) {
+                    int destX = i * widths[j] + x;
+                    int destY = j * heights[i] + y;
+                    output_img->data[destY * output_img->width + destX] = scaledTile[y * widths[j] + x];
+                }
+            } 
+            free(scaledTile);   
+        }
     }
-
-    src_y += heights[tile_row];  // Move to the next row based on tile height
-  }
 
     return 1; // Success
 }
