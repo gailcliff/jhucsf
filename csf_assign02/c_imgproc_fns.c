@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h> // remove this
+#include <math.h>
 #include "imgproc.h"
 
 // TODO: define your helper functions here
@@ -44,8 +45,6 @@ void imgproc_mirror_v( struct Image *input_img, struct Image *output_img ) {
   int height = input_img->height;
 
   
-  uint32_t temp;
-
     for (int col = 0; col < width; col++) {
       for (int row = 0; row < height; row++) {
         // Calculate the indices of the pixels to swap
@@ -77,49 +76,107 @@ void imgproc_mirror_v( struct Image *input_img, struct Image *output_img ) {
 // }
 
 
+// Custom ceil function
+int custom_ceil(int numerator, int denominator) {
+    return (numerator + denominator - 1) / denominator;
+}
+
+// Custom floor function
+int custom_floor(int numerator, int denominator) {
+    return numerator / denominator;
+}
+
+
 int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
     // Check for invalid input (n must be at least 1)
     if (n < 1) {
         return 0;
     }
-
+    
     int input_width = input_img->width;
     int input_height = input_img->height;
 
     // Calculate the size of each tile
+    double true_tile_width = (double) input_width / n;
+    double true_tile_height = (double) input_height / n;
+
     int tile_width = input_width / n;
     int tile_height = input_height / n;
-
+    
     // Ensure that tiles have non-zero dimensions
     if (tile_width == 0 || tile_height == 0) {
         return 0;
     }
 
     // Set output image dimensions
-    output_img->width = tile_width * n;
-    output_img->height = tile_height * n;
+    output_img->width = input_width;
+    output_img->height = input_height;
 
-    // Loop over each tile
-    for (int ty = 0; ty < n; ty++) {
-        for (int tx = 0; tx < n; tx++) {
-            // Loop over each pixel within the tile
-            for (int y = 0; y < tile_height; y++) {
-                for (int x = 0; x < tile_width; x++) {
-                    // Calculate source and destination indices
-                    int src_x = x;
-                    int src_y = y;
-                    int src_index = src_y * input_width + src_x;
-                    
-                    int dst_x = tx * tile_width + x;
-                    int dst_y = ty * tile_height + y;
-                    int dst_index = dst_y * (tile_width * n) + dst_x;
+    ////
 
-                    // Copy the pixel from source to destination
-                    output_img->data[dst_index] = input_img->data[src_index];
-                }
-            }
-        }
+    int ceil_w = custom_ceil(input_width, n);
+    int floor_w = custom_floor(input_width, n);
+    int ceil_h = custom_ceil(input_height, n);
+    int floor_h = custom_floor(input_height, n);
+    
+    // Calculate the number of ceil and floor values
+    int num_ceil_w = input_width - (floor_w * n);
+    int num_floor_w = n - num_ceil_w;
+
+    int num_ceil_h = input_height - (floor_h * n);
+    int num_floor_h = n - num_ceil_h;
+    
+    int widths[n];
+    int heights[n];
+
+  
+    if (widths == NULL || heights == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
     }
+    
+    // Fill the array with ceil and floor values
+    for (int i = 0; i < num_ceil_w; i++) {
+        widths[i] = ceil_w;
+    }
+    for (int i = num_ceil_w; i < n; i++) {
+        widths[i] = floor_w;
+    }
+
+    // heights
+    for (int i = 0; i < num_ceil_h; i++) {
+        heights[i] = ceil_h;
+    }
+    for (int i = num_ceil_h; i < n; i++) {
+        heights[i] = floor_h;
+    }
+    
+    // ENTER CODE FOR TILE HERE
+
+    int src_y = 0;
+  for (int tile_row = 0; tile_row < n; tile_row++) {
+    int src_x = 0;
+    int tile_width = widths[tile_col];
+    int tile_height = heights[tile_row];
+
+    for (int y = 0; y < tile_height; y++) {
+      for (int x = 0; x < tile_width; x++) {
+        // Calculate source pixel coordinates (avoiding out-of-bounds)
+        int src_pixel_x = (int)fmin(x * ((double)input_width / tile_width), input_width - 1);
+        int src_pixel_y = (int)fmin(y * ((double)input_height / tile_height), input_height - 1);
+
+        // Calculate destination coordinates within the tile in the output image
+        int dst_x = src_x + x;  // Offset by position within the tile
+        int dst_y = src_y + y;
+
+        // Get source pixel and set it in the output image
+        uint32_t pixel = input_img->data[src_pixel_y * input_width + src_pixel_x];
+        output_img->data[dst_y * input_width + dst_x] = pixel;
+      }
+    }
+
+    src_y += heights[tile_row];  // Move to the next row based on tile height
+  }
 
     return 1; // Success
 }
