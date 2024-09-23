@@ -86,7 +86,6 @@ int custom_floor(int numerator, int denominator) {
     return numerator / denominator;
 }
 
-
 int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
     // Check for invalid input (n must be at least 1)
     if (n < 1) {
@@ -112,8 +111,6 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
     output_img->width = input_width;
     output_img->height = input_height;
 
-    ////
-
     int ceil_w = custom_ceil(input_width, n);
     int floor_w = custom_floor(input_width, n);
     int ceil_h = custom_ceil(input_height, n);
@@ -128,12 +125,6 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
     
     int widths[n];
     int heights[n];
-
-  
-    if (widths == NULL || heights == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
-    }
     
     // Fill the array with ceil and floor values
     for (int i = 0; i < num_ceil_w; i++) {
@@ -150,15 +141,14 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
     for (int i = num_ceil_h; i < n; i++) {
         heights[i] = floor_h;
     }
-    
-    output_img->width = input_width;
-    output_img->height = input_height;
+
+    int totalHeightTraversed = 0;
 
     for(int i = 0; i < n; i++) {
+        
+        int widthTraversedAtCurrentEpoch = 0;
+
         for (int j = 0; j < n; j++) {
-            // if (i > 2 || j > 2) {
-                // continue;
-            //}
             uint32_t* scaledTile = malloc(heights[i] * widths[j] * sizeof(uint32_t));
             if (scaledTile == NULL) {
                 exit(1);  // Memory allocation failed
@@ -171,17 +161,22 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
                     scaledTile[y * widths[j] + x] = input_img->data[originalY * input_img->width + originalX];
                 }
             }
-            // transfer tile into position
+
+            // move tile onto grid
             for (int y = 0; y < heights[i]; y++) {
                 for (int x = 0; x < widths[j]; x++) {
-                    int destX = i * widths[j] + x;
-                    int destY = j * heights[i] + y;
+                    int destX = widthTraversedAtCurrentEpoch + x;
+                    int destY = totalHeightTraversed + y;
                     output_img->data[destY * output_img->width + destX] = scaledTile[y * widths[j] + x];
                 }
+                
             } 
-            free(scaledTile);   
+            widthTraversedAtCurrentEpoch += widths[j];
+            free(scaledTile);
         }
+        totalHeightTraversed += heights[i];
     }
+
 
     return 1; // Success
 }
