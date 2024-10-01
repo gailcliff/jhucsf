@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "imgproc.h": "c"
+        "imgproc.h": "c",
+        "stdbool.h": "c"
     }
 }

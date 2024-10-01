@@ -29,11 +29,87 @@
  *   %rdi - pointer to original struct Image
  *   %rsi - pointer to output struct Image
  */
-	.globl imgproc_mirror_h
-imgproc_mirror_h:
 	/* TODO: implement */
-	ret
+	; ret
+	
+	.globl imgproc_mirror_h
+	.type imgproc_mirror_h, @function
 
+imgproc_mirror_h:
+    pushq %rbp
+    movq %rsp, %rbp
+    
+    # Preserve callee-saved registers
+    pushq %rbx
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+    
+    # Load input_img and output_img pointers
+    movq %rdi, %r12  # input_img
+    movq %rsi, %r13  # output_img
+    
+    # Load width and height
+    movl (%r12), %r14d  # width
+    movl 4(%r12), %r15d  # height
+    
+    # Initialize row counter
+    xorl %ebx, %ebx  # row = 0
+    
+outer_loop:
+    # Check if row < height
+    cmpl %r15d, %ebx
+    jge end_outer_loop
+    
+    # Initialize column counter
+    xorl %ecx, %ecx  # col = 0
+    
+inner_loop:
+    # Check if col < width
+    cmpl %r14d, %ecx
+    jge end_inner_loop
+    
+    # Calculate src_index = row * width + col
+    movl %ebx, %eax
+    imull %r14d, %eax
+    addl %ecx, %eax
+    
+    # Calculate dst_index = row * width + (width - 1 - col)
+    movl %r14d, %edx
+    subl $1, %edx
+    subl %ecx, %edx
+    addl %eax, %edx
+    
+    # Load input_img->data[src_index]
+    movq 8(%r12), %rsi  # input_img->data
+    movb (%rsi, %rax), %dl
+    
+    # Store to output_img->data[dst_index]
+    movq 8(%r13), %rdi  # output_img->data
+    movb %dl, (%rdi, %rdx)
+    
+    # Increment col
+    incl %ecx
+    jmp inner_loop
+    
+end_inner_loop:
+    # Increment row
+    incl %ebx
+    jmp outer_loop
+    
+end_outer_loop:
+    # Restore callee-saved registers
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %rbx
+    
+    # Epilogue
+    movq %rbp, %rsp
+    popq %rbp
+    ret
 /*
  * void imgproc_mirror_v( struct Image *input_img, struct Image *output_img );
  *

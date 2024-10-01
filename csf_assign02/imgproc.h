@@ -62,6 +62,15 @@ void imgproc_grayscale( struct Image *input_img, struct Image *output_img );
 //   and overlay image do not have the same dimensions
 int imgproc_composite( struct Image *base_img, struct Image *overlay_img, struct Image *output_img );
 
-// TODO: add prototypes for your helper functions
+// prototypes for your helper functions
+int custom_ceil(int numerator, int denominator);
+int custom_floor(int numerator, int denominator);
+uint32_t get_r( uint32_t pixel );
+uint32_t get_g( uint32_t pixel );
+uint32_t get_b( uint32_t pixel );
+uint32_t get_a( uint32_t pixel );
+uint32_t make_pixel( uint32_t r, uint32_t g, uint32_t b, uint32_t a );
+uint32_t to_grayscale(uint32_t pixel);
+uint32_t create_composite_pixel(uint32_t bg_pixel, uint32_t fg_pixel);
 
 #endif // IMGPROC_H

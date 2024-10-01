@@ -97,7 +97,19 @@ void test_mirror_v_basic( TestObjs *objs );
 void test_tile_basic( TestObjs *objs );
 void test_grayscale_basic( TestObjs *objs );
 void test_composite_basic( TestObjs *objs );
+
 // TODO: add prototypes for additional test functions
+void test_custom_ceil(TestObjs *objs);
+void test_custom_floor(TestObjs *objs);
+void test_get_rgba(TestObjs *objs);
+void test_get_r(TestObjs *objs);
+void test_get_g(TestObjs *objs);
+void test_get_b(TestObjs *objs);
+void test_get_a(TestObjs *objs);
+void test_make_pixel(TestObjs *objs);
+void test_to_grayscale(TestObjs *objs);
+void test_create_composite_pixel(TestObjs *objs);
+// end prototypes for addition unit tests
 
 int main( int argc, char **argv ) {
   // allow the specific test to execute to be specified as the
@@ -115,6 +127,18 @@ int main( int argc, char **argv ) {
   TEST( test_tile_basic );
   TEST( test_grayscale_basic );
   TEST( test_composite_basic );
+
+  // additinal TEST() invocations
+  TEST(test_custom_ceil);
+  TEST(test_custom_floor);
+  TEST(test_get_rgba);
+  TEST(test_get_r);
+  TEST(test_get_g);
+  TEST(test_get_b);
+  TEST(test_get_a);
+  TEST(test_make_pixel);
+  TEST(test_to_grayscale);
+  TEST(test_create_composite_pixel);
 
   TEST_FINI();
 }
@@ -348,3 +372,123 @@ void test_composite_basic( TestObjs *objs ) {
   ASSERT( 0x000080FF == objs->smiley_out->data[87] );
 }
 
+// additional test functions
+void test_custom_ceil(TestObjs *objs) {
+  ASSERT(custom_ceil(5, 2) == 3);
+  ASSERT(custom_ceil(10, 3) == 4);
+  ASSERT(custom_ceil(7, 4) == 2);
+  ASSERT(custom_ceil(0, 5) == 0);
+}
+
+void test_custom_floor(TestObjs *objs) {
+  ASSERT(custom_floor(5, 2) == 2);
+  ASSERT(custom_floor(10, 3) == 3);
+  ASSERT(custom_floor(7, 4) == 1);
+  ASSERT(custom_floor(0, 5) == 0);
+}
+
+void test_get_rgba(TestObjs *objs) {
+  uint32_t pixel = 0x12345678;
+  ASSERT(get_r(pixel) == 0x12);
+  ASSERT(get_g(pixel) == 0x34);
+  ASSERT(get_b(pixel) == 0x56);
+  ASSERT(get_a(pixel) == 0x78);
+}
+
+void test_get_r(TestObjs *objs) {
+    ASSERT(get_r(0xFF000000) == 0xFF);
+    ASSERT(get_r(0x00FFFFFF) == 0x00);
+    ASSERT(get_r(0x12345678) == 0x12);
+    ASSERT(get_r(0x87654321) == 0x87);
+    ASSERT(get_r(0xFFFFFFFF) == 0xFF);
+    ASSERT(get_r(0x00000000) == 0x00);
+    ASSERT(get_r(0x80808080) == 0x80);
+}
+
+void test_get_g(TestObjs *objs) {
+    ASSERT(get_g(0x00FF0000) == 0xFF);
+    ASSERT(get_g(0xFF00FFFF) == 0x00);
+    ASSERT(get_g(0x12345678) == 0x34);
+    ASSERT(get_g(0x87654321) == 0x65);
+    ASSERT(get_g(0xFFFFFFFF) == 0xFF);
+    ASSERT(get_g(0x00000000) == 0x00);
+    ASSERT(get_g(0x80808080) == 0x80);
+}
+
+void test_get_b(TestObjs *objs) {
+    ASSERT(get_b(0x0000FF00) == 0xFF);
+    ASSERT(get_b(0xFFFF00FF) == 0x00);
+    ASSERT(get_b(0x12345678) == 0x56);
+    ASSERT(get_b(0x87654321) == 0x43);
+    ASSERT(get_b(0xFFFFFFFF) == 0xFF);
+    ASSERT(get_b(0x00000000) == 0x00);
+    ASSERT(get_b(0x80808080) == 0x80);
+}
+
+void test_get_a(TestObjs *objs) {
+    ASSERT(get_a(0x000000FF) == 0xFF);
+    ASSERT(get_a(0xFFFFFF00) == 0x00);
+    ASSERT(get_a(0x12345678) == 0x78);
+    ASSERT(get_a(0x87654321) == 0x21);
+    ASSERT(get_a(0xFFFFFFFF) == 0xFF);
+    ASSERT(get_a(0x00000000) == 0x00);
+    ASSERT(get_a(0x80808080) == 0x80);
+}
+
+void test_make_pixel(TestObjs *objs) {
+  uint32_t pixel = make_pixel(0x12, 0x34, 0x56, 0x78);
+  ASSERT(pixel == 0x12345678);
+
+  // Test case 1: Standard RGBA values
+    uint32_t pixel1 = make_pixel(100, 150, 200, 255);
+    ASSERT(get_r(pixel1) == 100);
+    ASSERT(get_g(pixel1) == 150);
+    ASSERT(get_b(pixel1) == 200);
+    ASSERT(get_a(pixel1) == 255);
+
+    // Test case 2: All maximum values
+    uint32_t pixel2 = make_pixel(255, 255, 255, 255);
+    ASSERT(pixel2 == 0xFFFFFFFF);
+
+    // Test case 3: All minimum values
+    uint32_t pixel3 = make_pixel(0, 0, 0, 0);
+    ASSERT(pixel3 == 0x00000000);
+
+    // Test case 4: Mixed values
+    uint32_t pixel4 = make_pixel(0x12, 0x34, 0x56, 0x78);
+    ASSERT(pixel4 == 0x12345678);
+}
+
+void test_to_grayscale(TestObjs *objs) {
+  uint32_t color_pixel = 0xFF8000FF; 
+  uint32_t gray_pixel = to_grayscale(color_pixel);
+  ASSERT(get_r(gray_pixel) == get_g(gray_pixel));
+  ASSERT(get_g(gray_pixel) == get_b(gray_pixel));
+  ASSERT(get_a(gray_pixel) == 0xFF);
+  
+  uint8_t expected_gray = (79*255 + 128*128 + 49*0) / 256;
+  ASSERT(get_r(gray_pixel) == expected_gray);
+}
+
+void test_create_composite_pixel(TestObjs *objs) {
+    // Test case 1: Fully opaque foreground
+    uint32_t bg_pixel1 = make_pixel(100, 150, 200, 255);
+    uint32_t fg_pixel1 = make_pixel(50, 100, 150, 255);
+    uint32_t result1 = create_composite_pixel(bg_pixel1, fg_pixel1);
+    ASSERT(result1 == make_pixel(50, 100, 150, 255));
+
+    // Test case 2: Semi-transparent foreground
+    uint32_t bg_pixel2 = make_pixel(200, 200, 200, 255);
+    uint32_t fg_pixel2 = make_pixel(100, 100, 100, 128);
+    uint32_t result2 = create_composite_pixel(bg_pixel2, fg_pixel2);
+    ASSERT(get_r(result2) == 149);
+    ASSERT(get_g(result2) == 149);
+    ASSERT(get_b(result2) == 149);
+    ASSERT(get_a(result2) == 255);
+
+    // Test case 3: Fully transparent foreground
+    uint32_t bg_pixel3 = make_pixel(50, 100, 150, 255);
+    uint32_t fg_pixel3 = make_pixel(200, 200, 200, 0);
+    uint32_t result3 = create_composite_pixel(bg_pixel3, fg_pixel3);
+    ASSERT(result3 == make_pixel(50, 100, 150, 255));
+}

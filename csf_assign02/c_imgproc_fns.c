@@ -1,12 +1,71 @@
+// c_imgproc_fns.c
+
 // C implementations of image processing functions
 
 #include <stdlib.h>
 #include <assert.h>
-#include <stdio.h> // remove this
-#include <math.h>
 #include "imgproc.h"
 
 // TODO: define your helper functions here
+// Custom ceiling function
+int custom_ceil(int numerator, int denominator) {
+    return (numerator + denominator - 1) / denominator;
+}
+
+// Custom floor function
+int custom_floor(int numerator, int denominator) {
+    return numerator / denominator;
+}
+
+uint32_t get_r( uint32_t pixel ) {
+    return (pixel >> 24) & 0xFF;
+}
+uint32_t get_g( uint32_t pixel ) {
+    return (pixel >> 16) & 0xFF;
+}
+uint32_t get_b( uint32_t pixel ) {
+    return (pixel >> 8)  & 0xFF;
+}
+uint32_t get_a( uint32_t pixel ) {
+    return pixel & 0xFF;
+}
+
+uint32_t make_pixel( uint32_t r, uint32_t g, uint32_t b, uint32_t a ) {
+    return (r << 24) | (g << 16) | (b << 8) | a;
+}
+
+uint32_t create_composite_pixel(uint32_t bg_pixel, uint32_t fg_pixel) {
+    // background
+    uint8_t bg_r   = get_r(bg_pixel);
+    uint8_t bg_g = get_g(bg_pixel); 
+    uint8_t bg_b  = get_b(bg_pixel);
+
+    // foreground
+    uint8_t fg_r   = get_r(fg_pixel); 
+    uint8_t fg_g = get_g(fg_pixel); 
+    uint8_t fg_b  = get_b(fg_pixel); 
+    uint8_t fg_a = get_a(fg_pixel);
+
+    uint8_t composite_r = ((fg_a * fg_r) + ((255 - fg_a) * bg_r)) / 255;
+    uint8_t composite_g = ((fg_a * fg_g) + ((255 - fg_a) * bg_g)) / 255;
+    uint8_t composite_b = ((fg_a * fg_b) + ((255 - fg_a) * bg_b)) / 255;
+    uint8_t composite_a = 255;
+
+    return make_pixel(composite_r, composite_g, composite_b, composite_a);
+}
+
+uint32_t to_grayscale(uint32_t pixel) {
+    uint8_t r   = get_r(pixel);
+    uint8_t g = get_g(pixel);   
+    uint8_t b  = get_b(pixel);
+    uint8_t a = get_a(pixel);
+
+    uint8_t gray = (79*r + 128*g + 49*b) / 256;
+
+    return make_pixel(gray, gray, gray, a);
+}
+
+// end helper functions
 
 // Mirror input image horizontally.
 // This transformation always succeeds.
@@ -16,17 +75,15 @@
 //   output_img - pointer to the output Image (in which the transformed
 //                pixels should be stored)
 void imgproc_mirror_h( struct Image *input_img, struct Image *output_img ) {
-  // TODO: implement
   int width = input_img->width;
   int height = input_img->height;
 
   for (int row = 0; row < height; row++) {
     for (int col = 0; col < width; col++) { 
-        // Calculate the source and destination indices
+
         int src_index = row * width + col;
         int dst_index = row * width + (width - 1 - col);
 
-        // Copy the pixel from source to destination
         output_img->data[dst_index] = input_img->data[src_index];
     }
   }
@@ -40,18 +97,17 @@ void imgproc_mirror_h( struct Image *input_img, struct Image *output_img ) {
 //   output_img - pointer to the output Image (in which the transformed
 //                pixels should be stored)
 void imgproc_mirror_v( struct Image *input_img, struct Image *output_img ) {
-  // TODO: implement
+
   int width = input_img->width;
   int height = input_img->height;
 
   
     for (int col = 0; col < width; col++) {
       for (int row = 0; row < height; row++) {
-        // Calculate the indices of the pixels to swap
+        
         int src_index = row * width + col;
         int dst_index = (height - 1 - row) * width + col;
 
-        // Swap the pixels
         output_img->data[dst_index] = input_img->data[src_index];
       }
     }  
@@ -75,17 +131,6 @@ void imgproc_mirror_v( struct Image *input_img, struct Image *output_img ) {
 //   return 0;
 // }
 
-
-// Custom ceil function
-int custom_ceil(int numerator, int denominator) {
-    return (numerator + denominator - 1) / denominator;
-}
-
-// Custom floor function
-int custom_floor(int numerator, int denominator) {
-    return numerator / denominator;
-}
-
 int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
     // Check for invalid input (n must be at least 1)
     if (n < 1) {
@@ -94,10 +139,6 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
     
     int input_width = input_img->width;
     int input_height = input_img->height;
-
-    // Calculate the size of each tile
-    double true_tile_width = (double) input_width / n;
-    double true_tile_height = (double) input_height / n;
 
     int tile_width = input_width / n;
     int tile_height = input_height / n;
@@ -111,22 +152,28 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
     output_img->width = input_width;
     output_img->height = input_height;
 
+    // if the dimensions are not divisible by n, then the dimensions 
+    // of some tiles will be bigger than others
+
     int ceil_w = custom_ceil(input_width, n);
     int floor_w = custom_floor(input_width, n);
     int ceil_h = custom_ceil(input_height, n);
     int floor_h = custom_floor(input_height, n);
     
-    // Calculate the number of ceil and floor values
+    // Calculate the number of tiles out of 'n' along 
+    // both the width and height that will be bigger in dimension
+    // (this matters in the case where the dimensions are not divisible by 'n')
     int num_ceil_w = input_width - (floor_w * n);
-    int num_floor_w = n - num_ceil_w;
-
     int num_ceil_h = input_height - (floor_h * n);
-    int num_floor_h = n - num_ceil_h;
     
+    // store the dimensions of tiles along the width
+    // and height
+    // e.g [267, 267, 266] for widths and [200, 200, 200] for heights
     int widths[n];
     int heights[n];
     
-    // Fill the array with ceil and floor values
+    // Fill each dimension array with respective dimensions.
+    // widths
     for (int i = 0; i < num_ceil_w; i++) {
         widths[i] = ceil_w;
     }
@@ -142,6 +189,7 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
         heights[i] = floor_h;
     }
 
+
     int totalHeightTraversed = 0;
 
     for(int i = 0; i < n; i++) {
@@ -149,7 +197,9 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
         int widthTraversedAtCurrentEpoch = 0;
 
         for (int j = 0; j < n; j++) {
-            uint32_t* scaledTile = malloc(heights[i] * widths[j] * sizeof(uint32_t));
+            // create each tile and place it on the grid
+            uint32_t* scaledTile = (uint32_t*) malloc(heights[i] * widths[j] * sizeof(uint32_t));
+
             if (scaledTile == NULL) {
                 exit(1);  // Memory allocation failed
             }
@@ -160,7 +210,7 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
                     int originalY = y * n;
                     scaledTile[y * widths[j] + x] = input_img->data[originalY * input_img->width + originalX];
                 }
-            }
+            } // tile has been fully created, now place it on the grid
 
             // move tile onto grid
             for (int y = 0; y < heights[i]; y++) {
@@ -172,6 +222,7 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
                 
             } 
             widthTraversedAtCurrentEpoch += widths[j];
+            
             free(scaledTile);
         }
         totalHeightTraversed += heights[i];
@@ -189,23 +240,12 @@ int imgproc_tile(struct Image *input_img, int n, struct Image *output_img) {
 //   output_img - pointer to the output Image (in which the transformed
 //                pixels should be stored)
 void imgproc_grayscale( struct Image *input_img, struct Image *output_img ) {
-    // TODO: implement
-    //for each pixel, apply a formula to the rgb values to determine the grayscale value
     for (int i = 0; i < input_img->width * input_img->height; i++) {
-        // gray = (in.data[i].r + in.data[i].g + in.data[i].b)/3;
+        
         uint32_t pixel = input_img->data[i];
 
-        uint8_t r   = (pixel >> 24) & 0xFF; // Bits 24-31
-        uint8_t g = (pixel >> 16) & 0xFF; // Bits 16-23
-        uint8_t b  = (pixel >> 8)  & 0xFF; // Bits 8-15
-        uint8_t a = pixel & 0xFF;
-
-        uint8_t gray = (79*r + 128*g + 49*b)/256;
-
-        output_img->data[i] = (gray << 24) | (gray << 16) | (gray << 8) | a;
-        // i have no idea what the fuck is going on
+        output_img->data[i] = to_grayscale(pixel);
     }
-    // return out;
 }
 
 // Overlay a foreground image on a background image, using each foreground
@@ -221,9 +261,7 @@ void imgproc_grayscale( struct Image *input_img, struct Image *output_img ) {
 //   1 if successful, or 0 if the transformation fails because the base
 //   and overlay image do not have the same dimensions
 int imgproc_composite( struct Image *base_img, struct Image *overlay_img, struct Image *output_img ) {
-  // TODO: implement
 
-  //initialize variables
     int num_pixels = base_img->width * base_img->height;
     int num_pixels_b = overlay_img->width * overlay_img->height;
 
@@ -231,30 +269,11 @@ int imgproc_composite( struct Image *base_img, struct Image *overlay_img, struct
       return 0;
     }
     
-    //iterate through all pixels in the combined image, and calculate the resulting rgb value once overlayed
-    for (int c = 0; c < num_pixels; c++) {
-        //calculate the x and y value of the current pixel
+    for (int c = 0; c < num_pixels; c++) { 
         uint32_t bg_pixel = base_img->data[c];
         uint32_t fg_pixel = overlay_img->data[c];
 
-        // background
-        uint8_t bg_r   = (bg_pixel >> 24) & 0xFF; // Bits 24-31
-        uint8_t bg_g = (bg_pixel >> 16) & 0xFF; // Bits 16-23
-        uint8_t bg_b  = (bg_pixel >> 8)  & 0xFF; // Bits 8-15
-        // uint8_t bg_a = bg_pixel & 0xFF;
-
-        // foreground
-        uint8_t fg_r   = (fg_pixel >> 24) & 0xFF; // Bits 24-31
-        uint8_t fg_g = (fg_pixel >> 16) & 0xFF; // Bits 16-23
-        uint8_t fg_b  = (fg_pixel >> 8)  & 0xFF; // Bits 8-15
-        uint8_t fg_a = fg_pixel & 0xFF;
-
-        uint8_t composite_r = ((fg_a * fg_r) + ((255 - fg_a) * bg_r)) / 255;
-        uint8_t composite_g = ((fg_a * fg_g) + ((255 - fg_a) * bg_g)) / 255;
-        uint8_t composite_b = ((fg_a * fg_b) + ((255 - fg_a) * bg_b)) / 255;
-        uint8_t composite_a = 255;
-
-        output_img->data[c] = (composite_r << 24) | (composite_g << 16) | (composite_b << 8) | composite_a;
+        output_img->data[c] = create_composite_pixel(bg_pixel, fg_pixel);
     }
   return 1;
 }
