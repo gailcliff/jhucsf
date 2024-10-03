@@ -6,11 +6,7 @@ Names of team members
 Contributions of each team member
 
 Mahendra
-    Implemented: imgproc_mirror_h, imgproc_mirror_v
-    Wrote various unit tests for color components of a uint32_t pixel representation
-    (i.e tests for getting r, g, b and a from a pixel and making a pixel from its components) 
+    Implemented to_grayscale and helper functions get_r, get_g, get_b
 Clifford
-    Implemented imgproc_composite, imgproc_grayscale, imgproc_tile
-    Wrote unit tests for image manipulation operations like grayscale and composite
-    Debugged the tile function
+    Implemented imgproc_h, imgproc_v and helper functions make_pixel and get_a
 

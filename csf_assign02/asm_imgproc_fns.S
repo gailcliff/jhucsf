@@ -9,256 +9,213 @@
 #define IMAGE_HEIGHT_OFFSET  4
 #define IMAGE_DATA_OFFSET    8
 
+// ----------------------- Begin helper functions -----------------------
+
 /*
- * TODO: define your helper functions here.
- * Don't forget to use the .globl directive to make
- * them visible to the test code.
+ * int custom_ceil(int numerator, int denominator);
+ *
+ * Returns the ceil value of dividing numerator and denominator
+ *
  */
+	.globl custom_ceil
+custom_ceil:
+	// MS3
+	xorl %eax, %eax
+	ret
+
+
+/*
+ * int custom_floor(int numerator, int denominator);
+ *
+ * Returns the floor value of dividing numerator and denominator
+ *
+ */
+	.globl custom_floor
+custom_floor:
+	// MS3
+	xorl %eax, %eax
+	ret
+
+
+/*
+* uint32_t create_composite_pixel(uint32_t bg_pixel, uint32_t fg_pixel) {
+* 
+* Calculates the composite transformation of the foreground pixel and background pixel
+* 
+*/
+	.globl create_composite_pixel
+create_composite_pixel:
+	// MS3
+	xorl %eax, %eax
+	ret
 
 /*
  * uint32_t get_r( uint32_t pixel );
  *
- * Extracts the red component of a pixel.
+ * Get red value from a pixel.
  *
  * Parameters:
- *   %edi - pixel value
+ *   %edi - pixel
  *
- * Returns:
- *   extracted red color component
+ * Return red in %eax
  */
 	.globl get_r
 get_r:
-	/* prologue to align stack */
-	pushq %rbp
-	movq %rsp, %rbp
-	subq $8, %rsp
-	pushq %rbx  // callee-saved register for local variable
+	subq $8, %rsp // stack alignment
 
-	movl %edi, %ebx  // load pixel value into local variable
-	shrl $24, %ebx  // shift right 24 bits to get red component
-	andl $0xFF, %ebx  // and with 255
-	movl %ebx, %eax  // move result into return value
+	movl %edi, %eax  // store pixel in return register rax
+	shrl $24, %eax  // right shift 24 bits
+	andl $0xFF, %eax  // bitwise %eax & 255
 
-	/* epilogue */
-	popq %rbx  // restore callee-saved register
-	addq $8, %rsp
-	popq %rbp
+	addq $8, %rsp // stack alignment
 	ret
 
 /*
  * uint32_t get_g( uint32_t pixel );
  *
- * Extracts the green component of a pixel.
+ * Get green value from a pixel.
  *
  * Parameters:
  *   %edi - pixel value
  *
- * Returns:
- *   extracted green color component
+ * Return green in %eax
  */
 	.globl get_g
 get_g:
-	/* prologue to align stack */
-	pushq %rbp
-	movq %rsp, %rbp
-	subq $8, %rsp
-	pushq %rbx  // callee-saved register for local variable
+	subq $8, %rsp // stack alignment
 
-	movl %edi, %ebx  // load pixel value into local variable
-	shrl $16, %ebx  // shift right 16 bits to get green component
-	andl $0xFF, %ebx  // and with 255
-	movl %ebx, %eax  // move result into return value
+	movl %edi, %eax  // store pixel in return register rax
+	shrl $16, %eax  // shift right 16 bits
+	andl $0xFF, %eax  // bitwise %eax & 255
 
-	/* epilogue */
-	popq %rbx  // restore callee-saved register
-	addq $8, %rsp
-	popq %rbp
+	addq $8, %rsp // stack alignment
 	ret
 
 /*
  * uint32_t get_b( uint32_t pixel );
  *
- * Extracts the blue component of a pixel.
+ * Get blue value from a pixel
  *
  * Parameters:
  *   %edi - pixel value
  *
- * Returns:
- *   extracted blue color component
+ * Return blue in %eax
  */
 	.globl get_b
 get_b:
-	/* prologue to align stack */
-	pushq %rbp
-	movq %rsp, %rbp
-	subq $8, %rsp
-	pushq %rbx  // callee-saved register for local variable
+	subq $8, %rsp // stack alignment
 
-	movl %edi, %ebx  // load pixel value into local variable
-	shrl $8, %ebx  // shift right 8 bits to get blue component
-	andl $0xFF, %ebx  // and with 255
-	movl %ebx, %eax  // move result into return value
+	movl %edi, %eax  // load pixel value into return register rax
+	shrl $8, %eax  // shift right 8 bits
+	andl $0xFF, %eax  // bitwise %eax & 255
 
-	/* epilogue */
-	popq %rbx  // restore callee-saved register
-	addq $8, %rsp
-	popq %rbp
+	addq $8, %rsp // stack alignment
 	ret
 
 /*
  * uint32_t get_a( uint32_t pixel );
  *
- * Extracts the alpha component of a pixel.
+ * Get the alpha value of a pixel
  *
  * Parameters:
  *   %edi - pixel value
  *
- * Returns:
- *   extracted alpha component
+ * Return alpha in %eax
  */
 	.globl get_a
 get_a:
-	/* prologue to align stack */
-	pushq %rbp
-	movq %rsp, %rbp
-	subq $8, %rsp
-	pushq %rbx  // callee-saved register for local variable
+	subq $8, %rsp // stack alignment
 
-	movl %edi, %ebx  // load pixel value into local variable
-	andl $0xFF, %ebx  // and with 255
-	movl %ebx, %eax  // load alpha value into return value
+	movl %edi, %eax  // load pixel value into local variable
+	andl $0xFF, %eax  // bitwise %eax & 255
 
-	/* epilogue */
-	popq %rbx  // restore callee-saved register
-	addq $8, %rsp
-	popq %rbp
+	addq $8, %rsp // stack alignment
 	ret
 
 /*
  * uint32_t make_pixel( uint32_t r, uint32_t g, uint32_t b, uint32_t a );
  *
- * Creates a new pixel based on the passed r, g, b, a components.
+ * Make a pixel from its rgba components.
  *
  * Parameters:
- *   %edi - the red component
- *   %esi - the green component
- *   %edx - the blue component
- *   %ecx - the alpha component
+ *   %edi - red value
+ *   %esi - green value
+ *   %edx - blue value
+ *   %ecx - alpha
  *
- * Returns:
- *   the newly created pixel value
+ * Return pixel value in %eax
  */
 	.globl make_pixel
 make_pixel:
-	/* prologue to align stack */
-	pushq %rbp
-	movq %rsp, %rbp
-	subq $8, %rsp
-	pushq %rbx  // callee-saved register for local variable
+	subq $8, %rsp // stack alignment
 
-	movl %edi, %ebx  // move red in return value
-	shll $24, %ebx  // shift red left 24 bits
+	movl %edi, %eax  // move red in return value
+	shll $24, %eax  // shift red left 24 bits
 
 	movl %esi, %r8d  // move green in temp
 	shll $16, %r8d  // shift green left 16 bits
-	orl %r8d, %ebx  // or with result
+	orl %r8d, %eax  // or with result
 
 	movl %edx, %r8d  // move blue in temp
 	shll $8, %r8d  // shift blue left 8 bits
-	orl %r8d, %ebx  // or with result
+	orl %r8d, %eax  // or with result
 
-	orl %ecx, %ebx  // or alpha with result
-	movl %ebx, %eax  // store pixel in return value
+	orl %ecx, %eax  // or alpha with result
 
-	/* epilogue */
-	popq %rbx  // restore callee-saved register
-	addq $8, %rsp
-	popq %rbp
+	addq $8, %rsp // stack alignment
 	ret
 
 /*
  * uint32_t to_grayscale( uint32_t pixel);
  *
- * Converts pixel value to grayscale.
+ * Transform pixel value to grayscale.
  *
  * Parameters:
  *   %edi - pixel value
  *
- * Returns:
- *   the grayscale equivalent of the pixel
+ * Return grayscale transformation in %eax
  */
 	.globl to_grayscale
 to_grayscale:
-	/* prologue to align stack */
-	pushq %rbp
-	movq %rsp, %rbp
-	subq $8, %rsp
+	subq $8, %rsp // stack alignment
 	
-	call get_r  // get red value in pixel
-	movl %eax, %esi // store returned red value
-	call get_g  // get green value in pixel
-	movl %eax, %edx // store returned green value
-	call get_b  // get blue value in pixel
-	movl %eax, %ecx // store returned blue value
-	call get_a  // get alpha value in pixel
-	movl %eax, %r8d // store returned alpha value
+	call get_r  // execute get_r function
+	movl %eax, %esi // store result in esi
 
-	// calculate grayscale pixel value using formula
-	imull $79, %esi  // 79 * red
-	imull $128, %edx  // 128 * green
-	imull $49, %ecx  // 49 * blue
-	addl %esi, %edx  // (79 * red) + (128 * green)
-	addl %ecx, %edx  // result above + (49 * blue)
+	call get_g  // execute get_g function function
+	movl %eax, %edx // store result in ex
 
-	shrl $8, %edx  // divide result of addition by 256
+	call get_b  // execute get_b function
+	movl %eax, %ecx // store result in ecx
+
+	call get_a  // execute get_a function
+	movl %eax, %r8d // store result in r8d
+
+
+	// Calculate respective grayscale values of pixel components
+	imull $79, %esi  // 79*r
+	imull $128, %edx  // 128*g
+	imull $49, %ecx  // 49*b
+	addl %esi, %edx  // (79*r) + (128*g)
+	addl %ecx, %edx  // (79*r) + (128*g) + (49 * blue)
+	
+	// divide by 256 by shifting right 8 bits
+	shrl $8, %edx // (79*r + 128*g + 49 * blue) / 256
 
 	// store grayscale pixel value and alpha to make pixel
-	movl %edx, %edi  // set red param to gray value
-	movl %edx, %esi  // set green param to gray value
-	movl %edx, %edx  // set blue param to gray value
-	movl %r8d, %ecx  // set alpha value to original value
-	call make_pixel  // make pixel with params
+	movl %edx, %edi  // r = gray
+	movl %edx, %esi  // g = gray
+	movl %edx, %edx  // b = gray
+	movl %r8d, %ecx  // alpha value is preserved
 
+	call make_pixel  // grayscale pixel is stored in rax after make_pixel returns
 
-	/* epilogue */
-	addq $8, %rsp
-	popq %rbp
+	addq $8, %rsp // stack alignment
 	ret
 
-/*
- * uint32_t blend_components( uint32_t fg, uint32_t bg, uint32_t alpha );
- *
- * Blend two color components based on the alpha values.
- *
- * Parameters:
- *   %edi - foreground pixel value
- *   %esi - background pixel value
- *   %edx - alpha value determining the blending
- *
- * Returns:
- *   the blended pixel value
- */
-	.globl blend_components
-blend_components:
-	// implemented in MS 3
-	ret
 
-/*
- * uint32_t blend_colors( uint32_t fg, uint32_t bg );
- *
- * Blend foreground and background pixel values.
- *
- * Parameters:
- *   %edi - foreground pixel to be processed
- *   %esi - background pixel to be processed
- *
- * Returns:
- *   the blended pixel value
- */
-	.globl blend_colors
-blend_colors:
-	// implemented in MS 3
-	ret
+// ----------------------- End helper functions -----------------------
+
 
 /*
  * Implementations of API functions
@@ -276,63 +233,74 @@ blend_colors:
  */
 	.globl imgproc_mirror_h
 imgproc_mirror_h:
-    subq $8, %rsp                // Align the stack
+    subq $8, %rsp     // Stack alignment
+	
+	// save callee-saved registers
+	pushq %rbx // variable for source index
+	pushq %r12 // temporary variable for computation of mirror_h calculation
+	pushq %r13 // variable for holding value at input_img->data[src_index] when copying to output_img
 
-    movq %rdi, %r8               // r8 = input_img
-    movq %rsi, %r9               // r9 = output_img
+	movl IMAGE_WIDTH_OFFSET(%rdi), %edx // width
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %ecx // height
+    
+    movq IMAGE_DATA_OFFSET(%rdi), %r8    // input_img->data
+    movq IMAGE_DATA_OFFSET(%rsi), %r9    // output-img->data
 
-    // Get height and width from input_img
-    movl IMAGE_HEIGHT_OFFSET(%r8), %eax  // %eax = input_img->height
-    movl IMAGE_WIDTH_OFFSET(%r8), %ebx   // %ebx = input_img->width
+		movl $0, %r10d 					// set row counter to 0
 
-    movq IMAGE_DATA_OFFSET(%r8), %r8               // r8 = input_img->data
-    movq IMAGE_DATA_OFFSET(%r9), %r9               // r9 = output-img->data
+	.LrowLoop_Mirror_h:
+		cmpl %ecx, %r10d	// compare row >= height			
+		jge .Lend_Mirror_h	// end loop if row >= height
 
-		movl $0, %r12d 								// r12d == row == 0
+		movl $0, %r11d					// set column counter to 0 for inner loop
+	.LcolLoop_Mirror_h:
+		cmpl %edx, %r11d              // compare column >= width
+		jge .LnextRow_Mirror_h		// go to next iteration of outer loop if col >= width
 
-.Lrowloop_h:
-		cmpl %eax, %r12d				// if row >= height
-		jge .LstopLoop_h				// exit out of loop
 
-    //start inner loop for columns
-    movl $0, %r13d					//r13d == columns == 0
+		// calculation for the source index: row * width + column
+		movl %r10d, %ebx             // get row
+		imul %edx, %ebx          	 // row * width
+		addl %r11d, %ebx             // row * width + column
 
-.LcolumnLoop_h:
-    cmpl %ebx, %r13d              //if column >= width
-    jge .LnextRow_h								//exit out of loop
+		
+		// calculation for the destination index: row * width + (width - 1 - col)
+		
+		// step 1. doing row * width
+		movl %r10d, %eax            // get row
+		imul %edx, %eax             // row * width
+		
+		// step 2. doing (width - 1 - col)
+		movl %edx, %r12d             // get width
+		decl %r12d                   // width - 1
+		subl %r11d, %r12d            // width - 1 - column
 
-    // Calculate output_img->data[row * width + column]
-    movl %r12d, %edi             // rdi = row index
-    imul %ebx, %edi           	 // rdi = row * width
-    addl %r13d, %edi             // rdi = row * width + column index
+		// destination index = result of step 1 + result of step 2
+		addl %r12d, %eax             // row * width + (width - 1 - column)
 
-    // Calculate input_img->data[row * width + (width - 1 - column)]
-    //first completing the first half of equations (row * width)
-		movl %r12d, %edx            // rdx = row
-    imul %ebx, %edx             // rdx = row * width
-		//now completing second part of equation
-		movl %ebx, %esi             // rsi = width
-    decl %esi                   // rsi = width - 1
-    subl %r13d, %esi            //rsi = width - 1 - column index
 
-		//adding the equations together
-    addl %esi, %edx             // rdx = (row * width) + (width - 1 - column) (input index)
+		// output_img->data[dst_index] = input_img->data[src_index]
+		movl (%r8, %rbx, 4), %r13d    // load from input_img
+		movl %r13d, (%r9, %rax, 4)    // store in output_img
 
-    // Move pixel from input_img to output_img
-    movl (%r8, %rdx, 4), %esi    // Load pixel from input_img
-    movl %esi, (%r9, %rdi, 4)    // Store pixel in output_img
 
-    // moving to the next loop cycle
-    incl %r13d                  // column++
-    jmp .LcolumnLoop_h          // Repeat inner loop
 
-.LnextRow_h:
-    incl %r12d                  // row++
-    jmp .Lrowloop_h             // Repeat outer loop
+		incl %r11d                  // increment column
+		jmp .LcolLoop_Mirror_h      // go to next iteration of inner loop
 
-.LstopLoop_h:
-    addq $8, %rsp               // Fix the stack pointer
-    ret                         // end of function
+	.LnextRow_Mirror_h:
+		incl %r10d                  // increment row
+		jmp .LrowLoop_Mirror_h      // go to next iteration of outer loop
+
+
+
+	.Lend_Mirror_h:
+		popq %r13 // restore callee-saved registers
+		popq %r12
+		popq %rbx
+
+		addq $8, %rsp // stack alignment
+		ret
 
 
 /*
@@ -347,63 +315,117 @@ imgproc_mirror_h:
  */
 	.globl imgproc_mirror_v
 imgproc_mirror_v:
-    subq $8, %rsp                // Align the stack
+    subq $8, %rsp   // stack alignment
 
-    movq %rdi, %r8               // r8 = input_img
-    movq %rsi, %r9               // r9 = output_img
+	// callee-saved registers
+	pushq %rbx // variable for source index
+	pushq %r12 // variable for holding value at input_img->data[src_index] when copying to output_img
 
-    // Get height and width from input_img
-    movl IMAGE_HEIGHT_OFFSET(%r8), %eax  // %eax = input_img->height
-    movl IMAGE_WIDTH_OFFSET(%r8), %ebx   // %ebx = input_img->width
+	movl IMAGE_WIDTH_OFFSET(%rdi), %edx // width
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %ecx // height
+    
+    movq IMAGE_DATA_OFFSET(%rdi), %r8    // input_img->data
+    movq IMAGE_DATA_OFFSET(%rsi), %r9    // output-img->data
 
-    movq IMAGE_DATA_OFFSET(%r8), %r8         // r8 = input_img->data
-    movq IMAGE_DATA_OFFSET(%r9), %r9         // r9 = copying input_img data into output->img
+		movl $0, %r10d 		// set col counter to 0 for outer loop
+	.LcolLoop_Mirror_v:
+		cmpl %edx, %r10d	// compare col >= width
+		jge .Lend_Mirror_v	// jump to end of function if col >= width
 
-		movl $0, %r12d 				 // r12d == row == 0
 
-.Lvrowloop_h:
-		cmpl %eax, %r12d				// if row >= height
-		jge .LvstopLoop_h				// exit out of loop
+		movl $0, %r11d			// set row counter to 0 for inner loop
+	.LrowLoop_Mirror_v:
+		cmpl %ecx, %r11d            // compare row >= height
+		jge .LnextCol_Mirror_v		// go to next iteration of outer loop if row >= height
 
-    //start inner loop for columns
-    movl $0, %r13d					//r13d == columns == 0
+		// calculation for the source index: row * width + column
+		movl %r11d, %ebx             // get row
+		imul %edx, %ebx          	 // row * width
+		addl %r10d, %ebx             // row * width + column
 
-.LvcolumnLoop_h:
-    cmpl %ebx, %r13d      //if column >= width
-    jge .LvnextRow_h			//exit out of loop
 
-		// Calculate output_img->data[(input_img->height - 1 - row) * output_img->width + column] 
-    //doing first part of equation
-		movl %eax, %esi             // esi = height
-    decl %esi                   // esi = height - 1
-    subl %r12d, %esi            // esi = height - 1 - row
+		// calculation for the destination index: row * width + (width - 1 - col)
 		
-		//completing second half of equation
-    imul %ebx, %esi             // esi = (height - 1 - row) *  width
-		addl %r13d, %esi            // esi = (height - 1 - rows) * width + column index
+		// step 1. doing (height - 1 - col)
+		movl %ecx, %eax             // get height
+		decl %eax                   // height - 1
+		subl %r11d, %eax            // height - 1 - row index
+
+		// step 2. doing (height - 1 - col) * width
+		imul %edx, %eax             // (height - 1 - row index) * width
+		
+		// adding step 1 and step 2
+		addl %r10d, %eax			// (height - 1 - row index) * width + col
+
+		// output_img->data[dst_index] = input_img->data[src_index]
+		movl (%r8, %rbx, 4), %r12d    
+		movl %r12d, (%r9, %rax, 4) 
+
+		incl %r11d                  // increment row
+		jmp .LrowLoop_Mirror_v      // go to next iteration of inner loop
+
+	.LnextCol_Mirror_v:
+		incl %r10d                  // increment column
+		jmp .LcolLoop_Mirror_v      // go to next iteration of outer loop
 
 
-    //  Calculating input_img->data[row * output_img->width + column];
-    movl %r12d, %edi           // rdi = row index
-    imul %ebx, %edi            // rdi = row * width
-    addl %r13d, %edi           // rdi = row * width + column index
 
-    // Move pixel from input_img to output_img
-    movl (%r8, %rsi, 4), %edx    // Load pixel from input_img 
-    movl %edx, (%r9, %rdi, 4)    // Store pixel in output_img 
+	.Lend_Mirror_v:
+		popq %r12 // restore callee-saved registers
+		popq %rbx
 
-    //moving to the next loop cycle
-    incl %r13d                   // column++
-    jmp .LvcolumnLoop_h          // Repeat inner loop
+		addq $8, %rsp // stack alignment
+		ret // end imgproc_mirror_v
 
-.LvnextRow_h:
-    incl %r12d                   // row++
-    jmp .Lvrowloop_h             // Repeat outer loop
+/*
+ * void imgproc_grayscale( struct Image *input_img, struct Image *output_img );
+ *
+ * Transform image by converting each pixel to grayscale.
+ * This transformation always succeeds.
+ *
+ * Parameters:
+ *   %rdi - pointer to original struct Image
+ *   %rsi - pointer to output struct Image
+ */
+	.globl imgproc_grayscale
+imgproc_grayscale:
+	subq $8, %rsp // stack alignment
 
-.LvstopLoop_h:
-    // Cleanup and return
-    addq $8, %rsp               // Fix the stack pointer
-		ret													// end of function
+	// save callee-saved registers
+	pushq %r12 // for storing input_img->data
+	pushq %r13 // for storing output_img->data
+	pushq %r14 // loop counter
+
+    movl IMAGE_WIDTH_OFFSET(%rdi), %r10d  // input_img->width
+    movl IMAGE_HEIGHT_OFFSET(%rdi), %r11d  // input_img->height
+	movq IMAGE_DATA_OFFSET(%rdi), %r12  // input_img->data
+    movq IMAGE_DATA_OFFSET(%rsi), %r13  // output_img->data
+
+    imull %r10d, %r11d  // height * width (num pixels)
+    
+	movl $0, %r14d  // set loop counter to 0
+
+	.LGrayScale_Loop:
+		cmpl %r11d, %r14d // check if counter >= (width * height)
+		jge .LGrayScale_End // r14d >= width * height, jump to end of function
+
+		movl (%r12, %r14, 4), %edi // put pixel at current source index in edi register for the to_grayscale function
+		call to_grayscale  // Transform pixel at current index in input_img->data to grayscale
+
+		movl %eax, (%r13, %r14, 4)  // Get returned pixel from %eax and store in output_img->data
+
+		incl %r14d  // increment the counter
+		jmp .LGrayScale_Loop  // go to next iteration of loop
+
+
+
+	.LGrayScale_End:
+		popq %r14 // restore callee-saved registers
+		popq %r13
+		popq %r12
+
+		addq $8, %rsp // stack alignment
+		ret
 
 /*
  * int imgproc_tile( struct Image *input_img, int n, struct Image *output_img );
@@ -430,66 +452,6 @@ imgproc_tile:
 	ret
 
 /*
- * void imgproc_grayscale( struct Image *input_img, struct Image *output_img );
- *
- * Transform image by converting each pixel to grayscale.
- * This transformation always succeeds.
- *
- * Parameters:
- *   %rdi - pointer to original struct Image
- *   %rsi - pointer to output struct Image
- */
-	.globl imgproc_grayscale
-imgproc_grayscale:
-	/* prologue to align stack */
-	pushq %rbp
-	movq %rsp, %rbp
-	subq $8, %rsp
-
-	// callee-saved registers local variables
-	pushq %rbx  // total number of pixels
-	pushq %r12  // input_img->data 
-	pushq %r13  // output_img->data
-	pushq %r14  // looping variable
-
-    // get width and height
-    movl IMAGE_WIDTH_OFFSET(%rdi), %edx  // Get width
-    movl IMAGE_HEIGHT_OFFSET(%rdi), %ecx  // Get height
-
-    // get number of pixels in image
-    imull %edx, %ecx  // height * width
-	movl %ecx, %ebx
-
-    // prepare registers for looping
-    movq IMAGE_DATA_OFFSET(%rdi), %r12  // Get input_img->data
-    movq IMAGE_DATA_OFFSET(%rsi), %r13  // Get output_img->data
-    movl $0, %r14d  // use %ebx as looping variable (i)
-
-.Lgrayscale_loop:
-    cmpl %ebx, %r14d  // check if we have exhausted pixels to loop over
-    jge .Lgrayscale_loop_end // exit loop once we exhaust pixels
-
-    movl (%r12, %r14, 4), %edi  // Load current pixel to be converted
-    call to_grayscale  // call grayscale on pixel value
-
-    movl %eax, (%r13, %r14, 4)  // Store grayscale pixel
-
-    incl %r14d  // increment looping variable (i++)
-    jmp .Lgrayscale_loop  // jump to start of loop
-
-.Lgrayscale_loop_end:
-	// restore callee-saved registers
-	popq %r14
-	popq %r13
-	popq %r12
-	popq %rbx
-
-	/* epilogue */
-	addq $8, %rsp
-	popq %rbp
-    ret
-
-/*
  * int imgproc_composite( struct Image *base_img, struct Image *overlay_img );
  *
  * Overlay a foreground image on a background image, using each foreground
@@ -508,7 +470,9 @@ imgproc_grayscale:
 	.globl imgproc_composite
 imgproc_composite:
 	/* TODO: implement (this stub implementation just returns 0) */
-	xorl %eax, %eax
+	subq $8, %rsp
+	
+	subq $8, %rsp
 	ret
 
 /*
