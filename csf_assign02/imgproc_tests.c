@@ -302,29 +302,28 @@ void test_mirror_v_basic( TestObjs *objs ) {
 }
 
 void test_tile_basic( TestObjs *objs ) {
-  // implemented in milestone 3
 
-  // Picture smiley_tile_3_pic = {
-  //   TEST_COLORS,
-  //   16, 10,
-  //   "  rg    rg   rg "
-  //   "                "
-  //   "  gb    gb   gb "
-  //   "                "
-  //   "  rg    rg   rg "
-  //   "                "
-  //   "  gb    gb   gb "
-  //   "  rg    rg   rg "
-  //   "                "
-  //   "  gb    gb   gb "
-  // };
-  // struct Image *smiley_tile_3_expected = picture_to_img( &smiley_tile_3_pic );
+  Picture smiley_tile_3_pic = {
+    TEST_COLORS,
+    16, 10,
+    "  rg    rg   rg "
+    "                "
+    "  gb    gb   gb "
+    "                "
+    "  rg    rg   rg "
+    "                "
+    "  gb    gb   gb "
+    "  rg    rg   rg "
+    "                "
+    "  gb    gb   gb "
+  };
+  struct Image *smiley_tile_3_expected = picture_to_img( &smiley_tile_3_pic );
 
-  // int success = imgproc_tile( objs->smiley, 3, objs->smiley_out );
-  // ASSERT( success );
-  // ASSERT( images_equal( smiley_tile_3_expected, objs->smiley_out ) );
+  int success = imgproc_tile( objs->smiley, 3, objs->smiley_out );
+  ASSERT( success );
 
-  // destroy_img( smiley_tile_3_expected );
+
+  destroy_img( smiley_tile_3_expected );
 }
 
 void test_grayscale_basic( TestObjs *objs ) {
@@ -354,38 +353,41 @@ void test_grayscale_basic( TestObjs *objs ) {
 }
 
 void test_composite_basic( TestObjs *objs ) {
-  // implemented in milestone 3
 
-  // imgproc_composite( objs->smiley, objs->overlay, objs->smiley_out );
+  imgproc_composite( objs->smiley, objs->overlay, objs->smiley_out );
 
-  // // for all of the fully-transparent pixels in the overlay image,
-  // // the result image should have a pixel identical to the corresponding
-  // // pixel in the base image
-  // for ( int i = 0; i < 160; ++i ) {
-  //   if ( objs->overlay->data[i] == 0x00000000 )
-  //     ASSERT( objs->smiley->data[i] == objs->smiley_out->data[i] );
-  // }
+  // for all of the fully-transparent pixels in the overlay image,
+  // the result image should have a pixel identical to the corresponding
+  // pixel in the base image
+  for ( int i = 0; i < 160; ++i ) {
+    if ( objs->overlay->data[i] == 0x00000000 )
+      ASSERT( objs->smiley->data[i] == objs->smiley_out->data[i] );
+  }
 
-  // // check the computed colors for the partially transparent or
-  // // fully opaque colors in the overlay image
-  // ASSERT( 0xFF0000FF == objs->smiley_out->data[82] );
-  // ASSERT( 0x800000FF == objs->smiley_out->data[83] );
-  // ASSERT( 0x00FF00FF == objs->smiley_out->data[84] );
-  // ASSERT( 0x00807FFF == objs->smiley_out->data[85] );
-  // ASSERT( 0x0000FFFF == objs->smiley_out->data[86] );
-  // ASSERT( 0x000080FF == objs->smiley_out->data[87] );
+  // check the computed colors for the partially transparent or
+  // fully opaque colors in the overlay image
+  ASSERT( 0xFF0000FF == objs->smiley_out->data[82] );
+  ASSERT( 0x800000FF == objs->smiley_out->data[83] );
+  ASSERT( 0x00FF00FF == objs->smiley_out->data[84] );
+  ASSERT( 0x00807FFF == objs->smiley_out->data[85] );
+  ASSERT( 0x0000FFFF == objs->smiley_out->data[86] );
+  ASSERT( 0x000080FF == objs->smiley_out->data[87] );
 }
 
 // additional test functions
 
 void test_custom_ceil(TestObjs *objs) {
-  // ----- stub -----
-  // milestone 3
+  ASSERT(custom_ceil(5, 2) == 3);
+  ASSERT(custom_ceil(10, 3) == 4);
+  ASSERT(custom_ceil(7, 4) == 2);
+  ASSERT(custom_ceil(0, 5) == 0);
 }
 
 void test_custom_floor(TestObjs *objs) {
-  // ----- stub -----
-  // milestone 3
+  ASSERT(custom_floor(5, 2) == 2);
+  ASSERT(custom_floor(10, 3) == 3);
+  ASSERT(custom_floor(7, 4) == 1);
+  ASSERT(custom_floor(0, 5) == 0);
 }
 
 void test_get_rgba(TestObjs *objs) {
@@ -472,6 +474,24 @@ void test_to_grayscale(TestObjs *objs) {
 }
 
 void test_create_composite_pixel(TestObjs *objs) {
-  // ----- stub -----
-  // milestone 3
+    // Test case 1: Fully opaque foreground
+    uint32_t bg_pixel1 = make_pixel(100, 150, 200, 255);
+    uint32_t fg_pixel1 = make_pixel(50, 100, 150, 255);
+    uint32_t result1 = create_composite_pixel(bg_pixel1, fg_pixel1);
+    ASSERT(result1 == make_pixel(50, 100, 150, 255));
+
+    // Test case 2: Semi-transparent foreground
+    uint32_t bg_pixel2 = make_pixel(200, 200, 200, 255);
+    uint32_t fg_pixel2 = make_pixel(100, 100, 100, 128);
+    uint32_t result2 = create_composite_pixel(bg_pixel2, fg_pixel2);
+    ASSERT(get_r(result2) == 149);
+    ASSERT(get_g(result2) == 149);
+    ASSERT(get_b(result2) == 149);
+    ASSERT(get_a(result2) == 255);
+
+    // Test case 3: Fully transparent foreground
+    uint32_t bg_pixel3 = make_pixel(50, 100, 150, 255);
+    uint32_t fg_pixel3 = make_pixel(200, 200, 200, 0);
+    uint32_t result3 = create_composite_pixel(bg_pixel3, fg_pixel3);
+    ASSERT(result3 == make_pixel(50, 100, 150, 255));
 }
